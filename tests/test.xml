@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<program language="IPPcode22">
+ <instruction order="30" opcode="PUSHFRAME">
+ </instruction>
+ <instruction order="20" opcode="CREATEFRAME">
+ </instruction>
+ <instruction order="10" opcode="MOVE">
+     <arg1 type="var">GF@counter</arg1>
+    <arg2 type="string"/>
+ </instruction>
+</program>

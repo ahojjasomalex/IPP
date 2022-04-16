@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<program language="IPPcode22">
+  <instruction order="5" opcode="WRITE">
+    <arg1 type="string">Proměnná\032GF@counter\032obsahuje\032</arg1>
+  </instruction>
+</program>
