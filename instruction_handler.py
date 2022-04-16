@@ -31,12 +31,10 @@ class FrameStack:
         self.frames.append(frame)
 
     def pop(self):
-        try:
-            popped = self.frames.pop()
-            if popped is not None:
-                return popped
-        except IndexError:
+        if len(self.frames) <= 0:
             sys.exit(55)
+        else:
+            return self.frames.pop()
 
 
 class DataStack:
@@ -67,6 +65,7 @@ class InstructionHandler:
 
     # helper debug function to print contents of frames and stacks
     def printMemory(self):
+        print(self.ins.name)
         print(f"GF | {self.GF.values}")
         try:
             print(f"LF | {self.LF.values}")
@@ -78,7 +77,7 @@ class InstructionHandler:
             print(f"TF | <EMPTY>")
 
         print(f"DataStack | {self.dataStack.values}")
-        print(f"FrameStack | {self.frameStack.frames}\n")
+        print(f"FrameStack | {[self.frameStack.frames[x].values for x in range(len(self.frameStack.frames))]}\n")
 
     def checkInstruction(self, ins):
         self.ins = ins
@@ -94,16 +93,19 @@ class InstructionHandler:
     def PUSHFRAME(self):
         try:
             self.LF = self.TF
-            self.frameStack.push(self.LF.values)
-            del self.TF
+            self.frameStack.push(self.LF)
+            self.TF = None
         except AttributeError:
             sys.exit(55)
 
     def POPFRAME(self):
         self.TF = self.frameStack.pop()
-        self.LF = self.frameStack.frames[-1]
+        try:
+            self.LF = self.frameStack.frames
+        except IndexError:
+            self.LF = None
 
-    def DEFVAR(self):  # TODO exit codes + TF attribute error
+    def DEFVAR(self):
 
         if self.ins.arg1.type == 'var':
             try:

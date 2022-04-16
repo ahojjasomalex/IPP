@@ -11,4 +11,6 @@
  </instruction>
     <instruction order="5" opcode="POPFRAME">
  </instruction>
+        <instruction order="6" opcode="POPFRAME">
+ </instruction>
 </program>
