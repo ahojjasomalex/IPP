@@ -101,7 +101,7 @@ class InstructionHandler:
     def POPFRAME(self):
         self.TF = self.frameStack.pop()
         try:
-            self.LF = self.frameStack.frames
+            self.LF = self.frameStack.frames[-1]
         except IndexError:
             self.LF = None
 
