@@ -6,9 +6,8 @@ import re
 from globals import *
 from collections import Counter
 
-
 from instruction import Instruction
-from instruction_handler import InstructionHandler
+from instruction_handler import ih
 
 
 # helper function to check if given file path is valid
@@ -145,7 +144,6 @@ def main():
 
     # printInstructions(INSTRUCTIONS)
 
-    ih = InstructionHandler()
     for ins in INSTRUCTIONS:
         ih.checkInstruction(ins)
         ih.printMemory()
