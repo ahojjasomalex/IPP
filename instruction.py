@@ -91,7 +91,6 @@ class Argument:
         else:
             self.type = arg.attrib['type']
             self.value = arg.text
-
             # string is empty not None
             if self.type == "string" and self.value is None:
                 self.value = ""

@@ -1,7 +1,7 @@
 import sys
+from globals import *
 
-
-def stripType(var):
+def splitVar(var):
     try:
         return var.split("@")[1]
     except AttributeError:
@@ -37,6 +37,20 @@ class FrameStack:
             return self.frames.pop()
 
 
+class CallStack:
+    def __init__(self):
+        self.values = []
+
+    def push(self, v):
+        self.values.append(v)
+
+    def pop(self):
+        if len(self.values) <= 0:
+            sys.exit(55)
+        else:
+            return self.values.pop()
+
+
 class DataStack:
     def __init__(self):
         self.values = []
@@ -45,10 +59,10 @@ class DataStack:
         self.values.append((type, val))
 
     def pop(self):
-        try:
+        if len(self.values) <= 0:
+            sys.exit(55)
+        else:
             return self.values.pop()
-        except IndexError:
-            sys.exit(56)
 
 
 class InstructionHandler:
@@ -60,7 +74,7 @@ class InstructionHandler:
         self.TF = None
 
         self.dataStack = DataStack()
-        self.callStack = DataStack()
+        self.callStack = CallStack()
         self.frameStack = FrameStack()
 
     # helper debug function to print contents of frames and stacks
@@ -77,7 +91,25 @@ class InstructionHandler:
             print(f"TF | <EMPTY>")
 
         print(f"DataStack | {self.dataStack.values}")
-        print(f"FrameStack | {[self.frameStack.frames[x].values for x in range(len(self.frameStack.frames))]}\n")
+        print(f"FrameStack | {[self.frameStack.frames[x].values for x in range(len(self.frameStack.frames))]}")
+        print(f"CallStack | {self.callStack.values}\n")
+
+    def checkArgCount(self):
+        if self.ins.name in ARGC0:
+            if self.ins.arg1.type or self.ins.arg2.type or self.ins.arg3.type is not None:
+                sys.exit(32)
+
+        if self.ins.name in ARGC1:
+            if self.ins.arg1.type is None or self.ins.arg2.type is not None or self.ins.arg3.type is not None:
+                sys.exit(32)
+
+        if self.ins.name in ARGC2:
+            if self.ins.arg1.type is None or self.ins.arg2.type is None or self.ins.arg3.type is not None:
+                sys.exit(32)
+
+        if self.ins.name in ARGC3:
+            if self.ins.arg1.type is None or self.ins.arg2.type is None or self.ins.arg3.type is None:
+                sys.exit(32)
 
     def checkInstruction(self, ins):
         self.ins = ins
@@ -106,46 +138,28 @@ class InstructionHandler:
             self.LF = None
 
     def DEFVAR(self):
-
         if self.ins.arg1.type == 'var':
             try:
-                if self.ins.arg1.frame == 'GF':
-                    if self.ins.arg1.id not in self.GF.values:
-                        self.GF.values[self.ins.arg1.id] = None
-                    else:
-                        sys.exit(52)
-                elif self.ins.arg1.frame == 'TF':
-                    if self.ins.arg1.id not in self.TF.values:
-                        self.TF.values[self.ins.arg1.id] = None
-                    else:
-                        sys.exit(52)
-                elif self.ins.arg1.frame == 'LF':
-                    try:
-                        if self.ins.arg1.id not in self.frameStack.frames[-1].values:
-                            self.frameStack.frames[-1].values[self.ins.arg1.id] = None
-                        else:
-                            sys.exit(52)
-                    except IndexError:
-                        sys.exit(55)
+                if self.ins.arg1.value not in self.__dict__[self.ins.arg1.frame].values:
+                    self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = None
+                else:
+                    sys.exit(52)
             except AttributeError:
                 sys.exit(55)
         else:
             sys.exit(53)
 
-    # def CALL(self):
-    #
-    # def RETURN(self):
-    #
+    def CALL(self):
+        pass
+
+    def RETURN(self):
+        pass
+
     def PUSHS(self):
         self.dataStack.push(self.ins.arg1.type, self.ins.arg1.value)
 
     def POPS(self):
-        if self.ins.arg1.type == 'var' and self.isInFrames(self.ins.arg1.id):
-
-            type, value = self.dataStack.pop()
-            self.moveToVar(type, value)
-        else:
-            sys.exit(53)
+        pass
 
     def ADD(self):
         if self.ins.arg1.type != 'var':
@@ -377,29 +391,11 @@ class InstructionHandler:
 
         self.moveToVar('int', val)
 
-    # def READ(self):
-    #     global input
-    #     print(input)
-    #     if input == 'stdin':
-    #         f = sys.stdin
-    #     else:
-    #         f = open(input)
-    #     line = f.readline()
+    def READ(self):
+        pass
 
     def WRITE(self):
-
-        if self.ins.arg1.type == 'var':
-            out = self.locateVariable(self.ins.arg1.frame, self.ins.arg1.id)
-            out = stripType(out)
-            # TODO write unset 56
-            if out is not None:
-                print(out, sep='', end='')
-            else:
-                sys.exit(56)
-        elif self.ins.arg1.type == 'nil':
-            print('', end='', sep='')
-        else:
-            print(self.ins.arg1.value, end='', sep='')
+        pass
 
     def CONCAT(self):
         if self.ins.arg1.type != 'var' and self.ins.arg2.type == 'string' and self.ins.arg3.type == 'string':
@@ -501,17 +497,17 @@ class InstructionHandler:
         self.moveToVar('string', type)
 
     def LABEL(self):
-        if self.ins.arg1.value not in LABELS:
-            LABELS.append(self.ins.arg1.value)
-        else:
-            sys.exit(52)
+        pass
 
-    # def JUMP(self):
-    #
-    # def JUMPIFEQ(self):
-    #
-    # def JUMPIFNEQ(self):
-    #
+    def JUMP(self):
+        pass
+
+    def JUMPIFEQ(self):
+        pass
+
+    def JUMPIFNEQ(self):
+        pass
+
     def EXIT(self):
         if self.ins.arg1.type == 'int':
             if 0 <= int(str(self.ins.arg1.value)) <= 49:
@@ -521,6 +517,9 @@ class InstructionHandler:
         else:
             sys.exit(53)
 
-    # def DPRINT(self):
-    #
-    # def BREAK(self):
+    def DPRINT(self):
+        pass
+    def BREAK(self):
+        pass
+
+ih = InstructionHandler()

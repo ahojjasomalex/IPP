@@ -13,8 +13,8 @@ OPCODES = ['MOVE', 'CREATEFRAME', 'PUSHFRAME', 'POPFRAME', 'DEFVAR', 'CALL', 'RE
            'CONCAT', 'STRLEN', 'GETCHAR', 'SETCHAR',
            'TYPE',
            'LABEL', 'JUMP', 'JUMPIFEQ', 'JUMPIFNEQ', 'EXIT',
-           'DPRINT', 'BREAK'
-           ]
+           'DPRINT', 'BREAK']
+
 # same instructions, but sorted to lists by number of arguments they get
 ARGC0 = ['CREATEFRAME', 'PUSHFRAME', 'POPFRAME', 'RETURN', 'BREAK']
 ARGC1 = ['DEFVAR', 'CALL', 'PUSHS', 'POPS', 'WRITE', 'LABEL', 'JUMP', 'EXIT', 'DRPINT']
