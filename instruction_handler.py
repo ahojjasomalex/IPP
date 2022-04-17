@@ -60,7 +60,7 @@ class DataStack:
 
     def pop(self):
         if len(self.values) <= 0:
-            sys.exit(55)
+            sys.exit(56)
         else:
             return self.values.pop()
 
@@ -131,22 +131,24 @@ class InstructionHandler:
         except AttributeError:
             print('ATTRIBUTE ERROR IN MOVEFROMFRAME', file=sys.stderr)
 
+    def checkArg1Var(self):
+        if self.ins.arg1.type != 'var':
+            sys.exit(53)
+
     def MOVE(self):
         try:
-            if self.ins.arg1.type == 'var':
-                if self.checkDefined(self.ins.arg1):
-                    try:
-                        self.checkDefined(self.ins.arg2)
-                    except KeyError:
-                        self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.ins.arg2.value
-                    except AttributeError:
-                        sys.exit(55)
-                    else:
-                        self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.moveFromFrame(self.ins.arg2.frame)
+            self.checkArg1Var()
+            if self.checkDefined(self.ins.arg1):
+                try:
+                    self.checkDefined(self.ins.arg2)
+                except KeyError:
+                    self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = (self.ins.arg2.type, self.ins.arg2.value)
+                except AttributeError:
+                    sys.exit(55)
                 else:
-                    sys.exit(52)
+                    self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.moveFromFrame(self.ins.arg2.frame)
             else:
-                sys.exit(53)
+                sys.exit(52)
         except AttributeError:
             sys.exit(55)
 
@@ -190,7 +192,9 @@ class InstructionHandler:
         self.dataStack.push(self.ins.arg1.type, self.ins.arg1.value)
 
     def POPS(self):
-        pass
+        self.checkArg1Var()
+        if self.checkDefined(self.ins.arg1):
+            self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.dataStack.pop()
 
     def ADD(self):
         if self.ins.arg1.type != 'var':
