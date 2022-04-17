@@ -116,8 +116,34 @@ class InstructionHandler:
         method = getattr(InstructionHandler, self.ins.name)
         method(self)
 
+    def checkDefined(self, arg):
+        if arg.value in self.__dict__[arg.frame].values:
+            return True
+        else:
+            return False
+
+    def moveFromFrame(self, frame):
+        try:
+            try:
+                return self.__dict__[frame].values[self.ins.arg2.value]
+            except KeyError:
+                sys.exit(54)
+        except AttributeError:
+            print('ATTRIBUTE ERROR IN MOVEFROMFRAME', file=sys.stderr)
+
     def MOVE(self):
-        pass
+        if self.checkDefined(self.ins.arg1):
+            if self.ins.arg1.type == 'var':
+                try:
+                    self.checkDefined(self.ins.arg2)
+                except KeyError:
+                    self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.ins.arg2.value
+                else:
+                    self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.moveFromFrame(self.ins.arg2.frame)
+            else:
+                sys.exit(54)
+        else:
+            sys.exit(52)
 
     def CREATEFRAME(self):
         self.TF = Frame()
@@ -140,7 +166,7 @@ class InstructionHandler:
     def DEFVAR(self):
         if self.ins.arg1.type == 'var':
             try:
-                if self.ins.arg1.value not in self.__dict__[self.ins.arg1.frame].values:
+                if not self.checkDefined(self.ins.arg1):
                     self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = None
                 else:
                     sys.exit(52)

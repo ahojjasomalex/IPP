@@ -18,16 +18,14 @@
     <arg1 type="var">LF@no2</arg1>
     <arg2 type="var">LF@no1</arg2>
   </instruction>
- <instruction order="7" opcode="WRITE">
-  <arg1 type="var">LF@no1</arg1>
- </instruction>
- <instruction order="8" opcode="WRITE">
-  <arg1 type="string">\032</arg1>
- </instruction>
- <instruction order="9" opcode="WRITE">
-  <arg1 type="var">LF@no2</arg1>
- </instruction>
+      <instruction order="7" opcode="MOVE">
+    <arg1 type="var">LF@no2</arg1>
+    <arg2 type="string">LF@no1</arg2>
+  </instruction>
  <instruction order="10" opcode="POPFRAME">
   </instruction>
-
+      <instruction order="11" opcode="MOVE">
+    <arg1 type="var">TF@no2</arg1>
+    <arg2 type="string">TF@no1</arg2>
+  </instruction>
 </program>
