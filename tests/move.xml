@@ -26,6 +26,9 @@
   </instruction>
       <instruction order="11" opcode="MOVE">
     <arg1 type="var">TF@no2</arg1>
-    <arg2 type="string">TF@no1</arg2>
+    <arg2 type="string">GF@no1</arg2>
+  </instruction>
+       <instruction order="12" opcode="DEFVAR">
+     <arg1 type="var">TF@no1</arg1>
   </instruction>
 </program>

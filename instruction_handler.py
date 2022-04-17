@@ -132,18 +132,23 @@ class InstructionHandler:
             print('ATTRIBUTE ERROR IN MOVEFROMFRAME', file=sys.stderr)
 
     def MOVE(self):
-        if self.checkDefined(self.ins.arg1):
+        try:
             if self.ins.arg1.type == 'var':
-                try:
-                    self.checkDefined(self.ins.arg2)
-                except KeyError:
-                    self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.ins.arg2.value
+                if self.checkDefined(self.ins.arg1):
+                    try:
+                        self.checkDefined(self.ins.arg2)
+                    except KeyError:
+                        self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.ins.arg2.value
+                    except AttributeError:
+                        sys.exit(55)
+                    else:
+                        self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.moveFromFrame(self.ins.arg2.frame)
                 else:
-                    self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.moveFromFrame(self.ins.arg2.frame)
+                    sys.exit(52)
             else:
-                sys.exit(54)
-        else:
-            sys.exit(52)
+                sys.exit(53)
+        except AttributeError:
+            sys.exit(55)
 
     def CREATEFRAME(self):
         self.TF = Frame()
