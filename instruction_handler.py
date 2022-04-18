@@ -132,6 +132,7 @@ class InstructionHandler:
         except AttributeError:
             sys.exit(55)
 
+
     def checkArg1Var(self):
         """
         Checks if arg1 is type var and calls checkDefined() method to check if variable is defined
@@ -156,7 +157,11 @@ class InstructionHandler:
             return None
         if arg.type in typeref or arg.type == 'var':
             if arg.type == 'var':
-                type, val = self.moveFromFrame(arg)
+                try:
+                    type, val = self.moveFromFrame(arg)
+                except TypeError:
+                    type = ''
+                    val = arg.value
             else:
                 try:
                     val = arg.value
@@ -200,7 +205,7 @@ class InstructionHandler:
 
     def MOVE(self):
         self.checkArg1Var()
-        self.moveToVar(*self.getSymb(['int','string','bool', 'nil', 'var'], self.ins.arg2))
+        self.moveToVar(*self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2))
 
     def CREATEFRAME(self):
         self.TF = Frame()
@@ -249,7 +254,7 @@ class InstructionHandler:
     def ADD(self):
         self.checkArg1Var()
 
-        type, val1, val2 = self.getSymbs(['int', 'var'], ['int', 'var'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['int'], ['int'], self.ins.arg2, self.ins.arg3)
 
         try:
             val = int(val1) + int(val2)
@@ -310,8 +315,6 @@ class InstructionHandler:
             val = val1 < val2
         except ValueError:
             sys.exit(53)
-        except ZeroDivisionError:
-            sys.exit(57)
 
         val = str(val).lower()
         self.moveToVar('bool', val)
@@ -322,8 +325,6 @@ class InstructionHandler:
             val = val1 > val2
         except ValueError:
             sys.exit(53)
-        except ZeroDivisionError:
-            sys.exit(57)
 
         val = str(val).lower()
         self.moveToVar('bool', val)
@@ -339,8 +340,6 @@ class InstructionHandler:
                 val = val1 == val2
             except ValueError:
                 sys.exit(53)
-            except ZeroDivisionError:
-                sys.exit(57)
             val = str(val).lower()
             self.moveToVar('bool', val)
         elif type1 == 'nil' or type2 == 'nil':
@@ -350,8 +349,6 @@ class InstructionHandler:
 
     def ANDOR(self):
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         _, val1, val2 = self.getSymbs(['bool'], ['bool'], self.ins.arg2, self.ins.arg3)
 
@@ -388,8 +385,6 @@ class InstructionHandler:
 
     def NOT(self):
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         type, val1 = self.getSymb(['bool'], self.ins.arg2)
 
@@ -441,9 +436,6 @@ class InstructionHandler:
 
         type, val1, val2 = self.getSymbs(['string'], ['string'], self.ins.arg2, self.ins.arg3)
 
-        if val1 == 'None' or val2 == 'None':
-            sys.exit(53)
-
         try:
             val = val1 + val2
             val = str(val)
@@ -456,10 +448,6 @@ class InstructionHandler:
         self.checkArg1Var()
 
         type, val1, _ = self.getSymbs(['string'], ['string'], self.ins.arg2)
-
-        if val1 == 'None':
-            sys.exit(53)
-
         try:
             val = len(val1)
         except ValueError:
@@ -500,28 +488,7 @@ class InstructionHandler:
 
     def TYPE(self):
         self.checkArg1Var()
-
-        if self.isInFrames(self.ins.arg2.id):
-            val1 = self.locateVariable(self.ins.arg2.frame, self.ins.arg2.id)
-            if val1 is not None:
-                type, value = val1.split("@")
-                if type in ['int', 'string', 'bool', 'nil']:
-                    val1 = value
-                else:
-                    sys.exit(53)
-            else:
-                sys.exit(56)
-
-        elif self.ins.arg2.type in ['int', 'string', 'bool', 'nil']:
-            val1 = self.ins.arg2.value
-        else:
-            self.checkDefined(self.ins.arg2)
-            val1 = "None"
-
-        if val1 == 'None':
-            sys.exit(53)
-        if type == 'nil':
-            type = ''
+        type, val1 = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2)
 
         self.moveToVar('string', type)
 
