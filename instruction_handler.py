@@ -151,15 +151,22 @@ class InstructionHandler:
         if arg is None:
             return None
         if arg.type in typeref or arg.type == 'var':
-            try:
-                type, val = self.__dict__[arg.frame].values[arg.value]
-            except KeyError:
-                val = arg.value
-                type = arg.type
-            except TypeError:
-                sys.exit(54)
-            except AttributeError:
-                sys.exit(55)
+            if arg.type == 'var':
+                try:
+                    type, val = self.__dict__[arg.frame].values[arg.value]
+                # nonexistent variable
+                except KeyError:
+                    sys.exit(54)
+                # nonexistent frame
+                except AttributeError:
+                    sys.exit(55)
+            else:
+                try:
+                    val = arg.value
+                    type = arg.type
+                except TypeError:
+                    sys.exit(54)
+
         else:
             sys.exit(53)
         return type, val
@@ -271,8 +278,6 @@ class InstructionHandler:
 
     def SUB(self):
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['int'], ['int'], self.ins.arg2, self.ins.arg3)
 
@@ -285,8 +290,6 @@ class InstructionHandler:
 
     def MUL(self):
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['int'], ['int'], self.ins.arg2, self.ins.arg3)
 
@@ -299,8 +302,6 @@ class InstructionHandler:
 
     def IDIV(self):
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['int'], ['int'], self.ins.arg2, self.ins.arg3)
 
@@ -346,23 +347,24 @@ class InstructionHandler:
         self.moveToVar('bool', val)
 
     def EQ(self):
-        if self.ins.arg1.type != 'var' or self.ins.arg2.type != self.ins.arg3.type and self.ins.arg2.type != 'nil':
+        self.checkArg1Var()
+
+        type1, val1 = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2)
+        type2, val2 = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg3)
+
+        if type1 == type2:
+            try:
+                val = val1 == val2
+            except ValueError:
+                sys.exit(53)
+            except ZeroDivisionError:
+                sys.exit(57)
+            val = str(val).lower()
+            self.moveToVar('bool', val)
+        elif type1 == 'nil' or type2 == 'nil':
+            self.moveToVar('bool', 'false')
+        else:
             sys.exit(53)
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
-
-        type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
-                                         self.ins.arg3)
-
-        try:
-            val = val1 == val2
-        except ValueError:
-            sys.exit(53)
-        except ZeroDivisionError:
-            sys.exit(57)
-
-        val = str(val).lower()
-        self.moveToVar('bool', val)
 
     def ANDOR(self):
         self.checkArg1Var()
@@ -424,8 +426,6 @@ class InstructionHandler:
 
     def INT2CHAR(self):
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         type, val1 = self.getSymb(['int'], self.ins.arg2)
 
