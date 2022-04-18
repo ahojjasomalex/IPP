@@ -152,7 +152,7 @@ def main():
     for ins in INSTRUCTIONS:
         checkArgCount(ins)
         ih.checkInstruction(ins)
-        ih.printMemory()
+        # ih.printMemory()
 
 
 if __name__ == '__main__':

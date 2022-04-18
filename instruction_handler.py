@@ -71,7 +71,8 @@ class InstructionHandler:
         self.callStack = CallStack()
         self.frameStack = FrameStack()
 
-    # helper debug function to print contents of frames and stacks
+        self.labels = {}
+
     def printMemory(self):
         """
         Debug function to print contents of frames and stacks
@@ -132,7 +133,6 @@ class InstructionHandler:
         except AttributeError:
             sys.exit(55)
 
-
     def checkArg1Var(self):
         """
         Checks if arg1 is type var and calls checkDefined() method to check if variable is defined
@@ -160,7 +160,7 @@ class InstructionHandler:
                 try:
                     type, val = self.moveFromFrame(arg)
                 except TypeError:
-                    type = ''
+                    type = None
                     val = arg.value
             else:
                 try:
@@ -184,6 +184,8 @@ class InstructionHandler:
         type1, val1 = self.getSymb(typeref1, arg2)
         type2, val2 = self.getSymb(typeref2, arg3)
         #  if types are incompatible -> error
+        if type1 is None or type2 is None:
+            sys.exit(56)
         if type1 == type2:
             return type1, val1, val2
         else:
@@ -205,17 +207,23 @@ class InstructionHandler:
 
     def MOVE(self):
         self.checkArg1Var()
-        self.moveToVar(*self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2))
+        type, val = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2)
+        if type == 'nil':
+            val = ''
+        self.moveToVar(type, val)
 
     def CREATEFRAME(self):
         self.TF = Frame()
 
     def PUSHFRAME(self):
-        try:
-            self.LF = self.TF
-            self.frameStack.push(self.LF)
-            self.TF = None
-        except AttributeError:
+        if self.TF is not None:
+            try:
+                self.LF = self.TF
+                self.frameStack.push(self.LF)
+                self.TF = None
+            except AttributeError:
+                sys.exit(55)
+        else:
             sys.exit(55)
 
     def POPFRAME(self):
@@ -335,6 +343,8 @@ class InstructionHandler:
         type1, val1 = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2)
         type2, val2 = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg3)
 
+        if type1 is None or type2 is None:
+            sys.exit(56)
         if type1 == type2:
             try:
                 val = val1 == val2
@@ -388,6 +398,11 @@ class InstructionHandler:
 
         type, val1 = self.getSymb(['bool'], self.ins.arg2)
 
+        if type != 'bool':
+            sys.exit(53)
+        if type is None:
+            sys.exit(56)
+
         if val1 == 'true':
             val1 = True
         elif val1 == 'false':
@@ -405,13 +420,14 @@ class InstructionHandler:
         self.checkArg1Var()
 
         type, val1 = self.getSymb(['int'], self.ins.arg2)
-
+        if type is None:
+            sys.exit(56)
         try:
             val = chr(int(val1))
         except ValueError:
-            sys.exit(53)
+            sys.exit(58)
 
-        self.moveToVar(type, val)
+        self.moveToVar('int', val)
 
     def STRI2INT(self):
         self.checkArg1Var()
@@ -421,7 +437,7 @@ class InstructionHandler:
         try:
             val = ord(val1[int(val2)])
         except ValueError:
-            sys.exit(53)
+            sys.exit(58)
 
         self.moveToVar(type, val)
 
@@ -429,7 +445,13 @@ class InstructionHandler:
         pass
 
     def WRITE(self):
-        pass
+        type, val1 = self.getSymb(['bool', 'int', 'string', 'nil'], self.ins.arg1)
+
+        if type is None:
+            sys.exit(56)
+        if type == 'nil':
+            print('', end='', sep='')
+        print(val1, end='', sep='')
 
     def CONCAT(self):
         self.checkArg1Var()
@@ -447,7 +469,9 @@ class InstructionHandler:
     def STRLEN(self):
         self.checkArg1Var()
 
-        type, val1, _ = self.getSymbs(['string'], ['string'], self.ins.arg2)
+        type, val1 = self.getSymb(['string'], self.ins.arg2)
+        if type is None:
+            sys.exit(56)
         try:
             val = len(val1)
         except ValueError:
@@ -455,19 +479,16 @@ class InstructionHandler:
 
         self.moveToVar('int', val)
 
-    def GETCHAR(self):  # TODO
+    def GETCHAR(self): # TODO
         self.checkArg1Var()
 
         type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
-
-        if val1 == 'None' or val2 == 'None':
-            sys.exit(53)
 
         try:
             val = val1[int(val2)]
             val = str(val)
         except ValueError:
-            sys.exit(53)
+            sys.exit(58)
         except IndexError:
             sys.exit(58)
 
@@ -476,24 +497,28 @@ class InstructionHandler:
 
         type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
 
-        if val1 == 'None' or val2 == 'None':
-            sys.exit(53)
-
         try:
             val = val1[int(val2)]
             val = str(val)
         except ValueError:
-            sys.exit(53)
+            sys.exit(58)
         self.moveToVar('string', val.lower())
 
     def TYPE(self):
         self.checkArg1Var()
         type, val1 = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2)
 
+        if type == None:
+            type = ''
+
         self.moveToVar('string', type)
 
     def LABEL(self):
-        LABELS.append((self.ins.name, self.ins.order))
+        if self.ins.arg1 not in LABELS:
+            LABELS.append((self.ins.name, self.ins.order))
+        else:
+            sys.exit(52
+                     )
 
     def JUMP(self):
         pass
@@ -512,13 +537,18 @@ class InstructionHandler:
                 sys.exit(57)
         elif self.ins.arg1.type == 'var':
             if self.checkDefined(self.ins.arg1):
-                type, val = self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value]
+                try:
+                    type, val = self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value]
+                except TypeError:
+                    sys.exit(56)
                 if type == 'int':
                     val = int(str(val))
                     if 0 <= val <= 49:
                         sys.exit(val)
                     else:
                         sys.exit(57)
+                else:
+                    sys.exit(53)
             else:
                 sys.exit(54)
         else:
