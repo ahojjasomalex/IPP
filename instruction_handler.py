@@ -310,8 +310,7 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
-                                         self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2, self.ins.arg3)
 
         try:
             val = val1 > val2
@@ -328,8 +327,7 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
-                                         self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2, self.ins.arg3)
 
         try:
             val = val1 == val2
@@ -400,7 +398,7 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        val1, _ = self.getSymbs(['bool'], ['bool'], self.ins.arg2)
+        type, val1, _ = self.getSymbs(['bool'], ['bool'], self.ins.arg2)
 
         if val1 == 'true':
             val1 = True
@@ -437,7 +435,7 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
 
         if val1 == 'None' or val2 == 'None':
             sys.exit(53)
@@ -460,7 +458,7 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        val1, val2 = self.getSymbs(['string'], ['string'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['string'], ['string'], self.ins.arg2, self.ins.arg3)
 
         if val1 == 'None' or val2 == 'None':
             sys.exit(53)
@@ -478,7 +476,7 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        val1, _ = self.getSymbs(['string'], ['string'], self.ins.arg2)
+        type, val1, _ = self.getSymbs(['string'], ['string'], self.ins.arg2)
 
         if val1 == 'None':
             sys.exit(53)
@@ -495,7 +493,7 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
 
         if val1 == 'None' or val2 == 'None':
             sys.exit(53)
@@ -513,7 +511,7 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
 
         if val1 == 'None' or val2 == 'None':
             sys.exit(53)
@@ -572,6 +570,17 @@ class InstructionHandler:
                 sys.exit(int(str(self.ins.arg1.value)))
             else:
                 sys.exit(57)
+        elif self.ins.arg1.type == 'var':
+            if self.checkDefined(self.ins.arg1):
+                type, val = self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value]
+                if type =='int':
+                    val = int(str(val))
+                    if 0 <= val <= 49:
+                        sys.exit(val)
+                    else:
+                        sys.exit(57)
+            else:
+                sys.exit(54)
         else:
             sys.exit(53)
 
