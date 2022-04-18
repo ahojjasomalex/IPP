@@ -557,10 +557,44 @@ class InstructionHandler:
             sys.exit(52)
 
     def JUMPIFEQ(self):
-        pass
+        type1, val1 = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2)
+        type2, val2 = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg3)
+
+        if type1 is None or type2 is None:
+            sys.exit(56)
+        if type1 == type2:
+            if val1 == val2:
+                try:
+                    self.counter = self.labels[self.ins.arg1.value]
+                except KeyError:
+                    sys.exit(52)
+        elif type1 == 'nil' or type2 == 'nil':
+            try:
+                self.counter = self.labels[self.ins.arg1.value]
+            except KeyError:
+                sys.exit(52)
+        else:
+            sys.exit(53)
 
     def JUMPIFNEQ(self):
-        pass
+        type1, val1 = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2)
+        type2, val2 = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg3)
+
+        if type1 is None or type2 is None:
+            sys.exit(56)
+        if type1 == type2:
+            if val1 != val2:
+                try:
+                    self.counter = self.labels[self.ins.arg1.value]
+                except KeyError:
+                    sys.exit(52)
+        elif type1 == 'nil' or type2 == 'nil':
+            try:
+                self.counter = self.labels[self.ins.arg1.value]
+            except KeyError:
+                sys.exit(52)
+        else:
+            sys.exit(53)
 
     def EXIT(self):
         if self.ins.arg1.type == 'int':
@@ -615,5 +649,6 @@ class InstructionHandler:
             self.checkInstruction(ins)
             self.counter += 1
             self.executed += 1
+
 
 ih = InstructionHandler()
