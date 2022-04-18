@@ -77,9 +77,7 @@ class InstructionHandler:
         self.dataStack = DataStack()
         self.callStack = CallStack()
         self.frameStack = FrameStack()
-        for i in INSTRUCTIONS:
-            self.ins = i
-            self.checkArgCount()
+
     # helper debug function to print contents of frames and stacks
     def printMemory(self):
         print(self.ins.name)
@@ -111,14 +109,13 @@ class InstructionHandler:
         except AttributeError:
             sys.exit(55)
 
-    def moveFromFrame(self, frame):
+    def moveFromFrame(self, arg):
         try:
-            try:
-                return self.__dict__[frame].values[self.ins.arg2.value]
-            except KeyError:
-                sys.exit(54)
+            return self.__dict__[arg.frame].values[arg.value]
+        except KeyError:
+            sys.exit(54)
         except AttributeError:
-            print('ATTRIBUTE ERROR IN MOVEFROMFRAME', file=sys.stderr)
+            sys.exit(55)
 
     def checkArg1Var(self):
         if self.ins.arg1.type != 'var':
@@ -167,7 +164,7 @@ class InstructionHandler:
                     sys.exit(55)
                 else:
                     self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.moveFromFrame(
-                        self.ins.arg2.frame)
+                        self.ins.arg2)
             else:
                 sys.exit(52)
         except AttributeError:
