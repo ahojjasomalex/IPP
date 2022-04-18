@@ -1,6 +1,7 @@
 import sys
 from globals import *
 
+
 def splitVar(var):
     try:
         return var.split("@")[1]
@@ -117,10 +118,13 @@ class InstructionHandler:
         method(self)
 
     def checkDefined(self, arg):
-        if arg.value in self.__dict__[arg.frame].values:
-            return True
-        else:
-            return False
+        try:
+            if arg.value in self.__dict__[arg.frame].values:
+                return True
+            else:
+                return False
+        except AttributeError:
+            sys.exit(55)
 
     def moveFromFrame(self, frame):
         try:
@@ -135,6 +139,33 @@ class InstructionHandler:
         if self.ins.arg1.type != 'var':
             sys.exit(53)
 
+    def getSymbs(self, typeref1, typeref2, arg2=None, arg3=None):
+        if arg2.type in typeref1 and arg3.type in typeref2 or arg2.type == 'var' or arg3.type == 'var':
+            try:
+                type1, val1 = self.__dict__[self.ins.arg2.frame].values[self.ins.arg2.value]
+            except KeyError:
+                val1 = self.ins.arg2.value
+                type1 = self.ins.arg2.type
+            try:
+                type2, val2 = self.__dict__[self.ins.arg3.frame].values[self.ins.arg3.value]
+            except KeyError:
+                val2 = self.ins.arg3.value
+                type2 = self.ins.arg3.type
+            if type1 == type2:
+                return type1, val1, val2
+            else:
+                sys.exit(53)
+        else:
+            sys.exit(53)
+
+    def moveToVar(self, type, value):
+        value = str(value)
+        try:
+            self.checkDefined(self.ins.arg1)
+        except AttributeError:
+            sys.exit(54)
+        self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = (type, value)
+
     def MOVE(self):
         try:
             self.checkArg1Var()
@@ -142,11 +173,12 @@ class InstructionHandler:
                 try:
                     self.checkDefined(self.ins.arg2)
                 except KeyError:
-                    self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = (self.ins.arg2.type, self.ins.arg2.value)
+                    self.moveToVar(self.ins.arg2.type, self.ins.arg2.value)
                 except AttributeError:
                     sys.exit(55)
                 else:
-                    self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.moveFromFrame(self.ins.arg2.frame)
+                    self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.moveFromFrame(
+                        self.ins.arg2.frame)
             else:
                 sys.exit(52)
         except AttributeError:
@@ -197,53 +229,53 @@ class InstructionHandler:
             self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.dataStack.pop()
 
     def ADD(self):
-        if self.ins.arg1.type != 'var':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
-        val1, val2 = self.getSymbs(['int'], ['int'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['int', 'var'], ['int', 'var'], self.ins.arg2, self.ins.arg3)
 
         try:
             val = int(val1) + int(val2)
         except ValueError:
             sys.exit(53)
 
-        self.moveToVar('int', val)
+        self.moveToVar(type, val)
 
     def SUB(self):
-        if self.ins.arg1.type != 'var':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
-        val1, val2 = self.getSymbs(['int'], ['int'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['int'], ['int'], self.ins.arg2, self.ins.arg3)
 
         try:
             val = int(val1) - int(val2)
         except ValueError:
             sys.exit(53)
 
-        self.moveToVar('int', val)
+        self.moveToVar(type, val)
 
     def MUL(self):
-        if self.ins.arg1.type != 'var':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
-        val1, val2 = self.getSymbs(['int'], ['int'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['int'], ['int'], self.ins.arg2, self.ins.arg3)
 
         try:
             val = int(val1) * int(val2)
         except ValueError:
             sys.exit(53)
 
-        self.moveToVar('int', val)
+        self.moveToVar(type, val)
 
     def IDIV(self):
-        if self.ins.arg1.type != 'var':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
-        val1, val2 = self.getSymbs(['int'], ['int'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['int'], ['int'], self.ins.arg2, self.ins.arg3)
 
         try:
             val = int(val1) // int(val2)
@@ -252,7 +284,7 @@ class InstructionHandler:
         except ZeroDivisionError:
             sys.exit(57)
 
-        self.moveToVar('int', val)
+        self.moveToVar(type, val)
 
     def LT(self):
 
@@ -260,7 +292,8 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
+                                         self.ins.arg3)
 
         try:
             val = val1 < val2
@@ -269,11 +302,7 @@ class InstructionHandler:
         except ZeroDivisionError:
             sys.exit(57)
 
-        if val is True:
-            val = 'true'
-        elif val is False:
-            val = 'false'
-
+        val = str(val).lower()
         self.moveToVar('bool', val)
 
     def GT(self):
@@ -281,7 +310,8 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
+                                         self.ins.arg3)
 
         try:
             val = val1 > val2
@@ -290,11 +320,7 @@ class InstructionHandler:
         except ZeroDivisionError:
             sys.exit(57)
 
-        if val is True:
-            val = 'true'
-        elif val is False:
-            val = 'false'
-
+        val = str(val).lower()
         self.moveToVar('bool', val)
 
     def EQ(self):
@@ -302,7 +328,8 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
+                                         self.ins.arg3)
 
         try:
             val = val1 == val2
@@ -311,11 +338,7 @@ class InstructionHandler:
         except ZeroDivisionError:
             sys.exit(57)
 
-        if val is True:
-            val = 'true'
-        elif val is False:
-            val = 'false'
-
+        val = str(val).lower()
         self.moveToVar('bool', val)
 
     def AND(self):
@@ -323,7 +346,7 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        val1, val2 = self.getSymbs(['bool'], ['bool'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['bool'], ['bool'], self.ins.arg2, self.ins.arg3)
 
         if val1 == 'None' or val2 == 'None':
             sys.exit(53)
@@ -350,7 +373,7 @@ class InstructionHandler:
             sys.exit(53)
         self.checkDefined(self.ins.arg1)
 
-        val1, val2 = self.getSymbs(['bool'], ['bool'], self.ins.arg2, self.ins.arg3)
+        type, val1, val2 = self.getSymbs(['bool'], ['bool'], self.ins.arg2, self.ins.arg3)
 
         if val1 == 'None' or val2 == 'None':
             sys.exit(53)
@@ -554,7 +577,9 @@ class InstructionHandler:
 
     def DPRINT(self):
         pass
+
     def BREAK(self):
         pass
+
 
 ih = InstructionHandler()
