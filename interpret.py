@@ -54,6 +54,24 @@ def printInstructions(instructions):
               f"ARG3:\ttype= {i.arg3.type}\tvalue= {i.arg3.value}\n")
 
 
+def checkArgCount(ins):
+    if ins.name in ARGC0:
+        if ins.arg1.type or ins.arg2.type or ins.arg3.type is not None:
+            sys.exit(32)
+
+    if ins.name in ARGC1:
+        if ins.arg1.type is None or ins.arg2.type is not None or ins.arg3.type is not None:
+            sys.exit(32)
+
+    if ins.name in ARGC2:
+        if ins.arg1.type is None or ins.arg2.type is None or ins.arg3.type is not None:
+            sys.exit(32)
+
+    if ins.name in ARGC3:
+        if ins.arg1.type is None or ins.arg2.type is None or ins.arg3.type is None:
+            sys.exit(32)
+
+
 def main():
     # global variables
     global INSTRUCTIONS  # list of instructions
@@ -145,6 +163,7 @@ def main():
     # printInstructions(INSTRUCTIONS)
 
     for ins in INSTRUCTIONS:
+        checkArgCount(ins)
         ih.checkInstruction(ins)
         ih.printMemory()
 
