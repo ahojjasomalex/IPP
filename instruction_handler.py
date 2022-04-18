@@ -125,8 +125,10 @@ class InstructionHandler:
         """
         try:
             return self.__dict__[arg.frame].values[arg.value]
+        # nonexistent variable
         except KeyError:
             sys.exit(54)
+        # nonexistent frame
         except AttributeError:
             sys.exit(55)
 
@@ -141,32 +143,26 @@ class InstructionHandler:
         if not self.checkDefined(self.ins.arg1):
             sys.exit(54)
 
-    def getSymb(self, typeref, arg=None):
+    def getSymb(self, typeref=None, arg=None):
         """
         Returns either variable or symbol type its value
         :param typeref: Reference type(s)
         :param arg: Instruction argument object
         :return: Type of argument, value of argument
         """
+        if typeref is None:
+            typeref = []
         if arg is None:
             return None
         if arg.type in typeref or arg.type == 'var':
             if arg.type == 'var':
-                try:
-                    type, val = self.__dict__[arg.frame].values[arg.value]
-                # nonexistent variable
-                except KeyError:
-                    sys.exit(54)
-                # nonexistent frame
-                except AttributeError:
-                    sys.exit(55)
+                type, val = self.moveFromFrame(arg)
             else:
                 try:
                     val = arg.value
                     type = arg.type
                 except TypeError:
                     sys.exit(54)
-
         else:
             sys.exit(53)
         return type, val
@@ -203,22 +199,14 @@ class InstructionHandler:
         self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = (type, value)
 
     def MOVE(self):
-        try:
-            self.checkArg1Var()
-            if self.checkDefined(self.ins.arg1):
-                try:
-                    self.checkDefined(self.ins.arg2)
-                except KeyError:
-                    self.moveToVar(self.ins.arg2.type, self.ins.arg2.value)
-                except AttributeError:
-                    sys.exit(55)
-                else:
-                    self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = self.moveFromFrame(
-                        self.ins.arg2)
+        self.checkArg1Var()
+        if self.checkDefined(self.ins.arg1):
+            try:
+                self.checkDefined(self.ins.arg2)
+            except KeyError:
+                self.moveToVar(self.ins.arg2.type, self.ins.arg2.value)
             else:
-                sys.exit(52)
-        except AttributeError:
-            sys.exit(55)
+                self.moveToVar(*self.moveFromFrame(self.ins.arg2))
 
     def CREATEFRAME(self):
         self.TF = Frame()
