@@ -10,8 +10,22 @@ from instruction import Instruction
 from instruction_handler import ih
 
 
-# helper function to check if given file path is valid
+class DummyInstruction:
+    """
+    Class for dummy instruction in the beginning and end of the instruction list
+    """
+
+    def __init__(self):
+        self.name = None
+        self.order = 0
+
+
 def checkFile(file):
+    """
+    Helper function to check if given file path is valid
+    :param file: File to check
+    :return: True if path is valid
+    """
     if os.path.exists(file) and os.path.isfile(file) and os.access(file, os.R_OK):
         return True
     else:
@@ -46,28 +60,9 @@ def checkAndSortOrder(instructions):
     return instructions
 
 
-def checkArgCount(ins):
-    if ins.name in ARGC0:
-        if ins.arg1.type or ins.arg2.type or ins.arg3.type is not None:
-            sys.exit(32)
-
-    if ins.name in ARGC1:
-        if ins.arg1.type is None or ins.arg2.type is not None or ins.arg3.type is not None:
-            sys.exit(32)
-
-    if ins.name in ARGC2:
-        if ins.arg1.type is None or ins.arg2.type is None or ins.arg3.type is not None:
-            sys.exit(32)
-
-    if ins.name in ARGC3:
-        if ins.arg1.type is None or ins.arg2.type is None or ins.arg3.type is None:
-            sys.exit(32)
-
-
 def main():
     # global variables
-    global INSTRUCTIONS  # list of instructions
-    global LABELS  # list of labels
+    INSTRUCTIONS = []  # list of all instructions
     global source  # XML source
     global input  # program input
 
@@ -149,10 +144,16 @@ def main():
 
     INSTRUCTIONS = checkAndSortOrder(INSTRUCTIONS)
 
-    for ins in INSTRUCTIONS:
-        checkArgCount(ins)
-        ih.checkInstruction(ins)
-        # ih.printMemory()
+    dummy_start = DummyInstruction()
+    dummy_end = DummyInstruction()
+    dummy_start.name = "DUMMY_START"
+    dummy_start.order = 0
+    dummy_end.name = "DUMMY_END"
+    dummy_start.order = len(INSTRUCTIONS)
+
+    INSTRUCTIONS = [dummy_start] + INSTRUCTIONS + [dummy_end]
+
+    ih.start(INSTRUCTIONS)
 
 
 if __name__ == '__main__':

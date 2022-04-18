@@ -23,4 +23,7 @@
   <arg3 type="var">GF@a</arg3>
   <arg2 type="int">120</arg2>
  </instruction>
+     <instruction order="8" opcode="WRITE">
+        <arg1 type="var">TF@c</arg1>
+    </instruction>
 </program>

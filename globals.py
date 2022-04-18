@@ -22,11 +22,7 @@ ARGC2 = ['MOVE', 'INT2CHAR', 'READ', 'STRLEN', 'TYPE', 'NOT']
 ARGC3 = ['ADD', 'SUB', 'MUL', 'IDIV', 'LT', 'GT', 'EQ', 'AND', 'OR', 'STRI2INT', 'CONCAT', 'GETCHAR', 'SETCHAR',
          'JUMPIFEQ', 'JUMPIFNEQ']
 
-LABELS = []  # store all defined labels from input here for future jumps
-INSTRUCTIONS = []  # list of all instructions from input
 
 #  file sources
 source = ""  # XML source file
 input = ""  # program input file
-
-

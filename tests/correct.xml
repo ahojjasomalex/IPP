@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<program language="IPPcode19" name="correct">
+<program language="IPPcode22" name="correct">
 	<instruction order="1" opcode="DEFVAR">
 		<arg1 type="var">GF@var</arg1>
 	</instruction>
@@ -33,4 +33,6 @@
 	<instruction order="8" opcode="WRITE">
         <arg1 type="var">GF@var</arg1>
     </instruction>
+	    <instruction order="9" opcode="BREAK"></instruction>
+
 </program>

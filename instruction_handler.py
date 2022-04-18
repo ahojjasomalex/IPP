@@ -2,6 +2,24 @@ import sys
 from globals import *
 
 
+def checkArgCount(ins):
+    if ins.name in ARGC0:
+        if ins.arg1.type or ins.arg2.type or ins.arg3.type is not None:
+            sys.exit(32)
+
+    if ins.name in ARGC1:
+        if ins.arg1.type is None or ins.arg2.type is not None or ins.arg3.type is not None:
+            sys.exit(32)
+
+    if ins.name in ARGC2:
+        if ins.arg1.type is None or ins.arg2.type is None or ins.arg3.type is not None:
+            sys.exit(32)
+
+    if ins.name in ARGC3:
+        if ins.arg1.type is None or ins.arg2.type is None or ins.arg3.type is None:
+            sys.exit(32)
+
+
 class Frame:
     def __init__(self):
         self.values = {}
@@ -61,6 +79,7 @@ class DataStack:
 
 class InstructionHandler:
     def __init__(self):
+
         self.ins = None
 
         self.GF = Frame()
@@ -72,26 +91,34 @@ class InstructionHandler:
         self.frameStack = FrameStack()
 
         self.labels = {}
+        self.counter = 0
+        self.executed = 0
 
     def printMemory(self):
         """
         Debug function to print contents of frames and stacks
         :return: Nothing
         """
-        print(self.ins.name)
-        print(f"GF | {self.GF.values}")
+        tabs = '\t'*3
+        frame = '-'*60
+        print('\n'+frame, file=sys.stderr)
+        print("| INS" + tabs + '| ' + self.ins.name, file=sys.stderr)
+        print(f"| GF{tabs}| {self.GF.values}", file=sys.stderr)
         try:
-            print(f"LF | {self.LF.values}")
+            print(f"| LF{tabs}| {self.LF.values}", file=sys.stderr)
         except AttributeError:
-            print(f"LF | <EMPTY>")
+            print(f"| LF{tabs}| <EMPTY>", file=sys.stderr)
         try:
-            print(f"TF | {self.TF.values}")
+            print(f"| TF{tabs}| {self.TF.values}", file=sys.stderr)
         except AttributeError:
-            print(f"TF | <EMPTY>")
+            print(f"| TF{tabs}| <EMPTY>", file=sys.stderr)
 
-        print(f"DataStack | {self.dataStack.values}")
-        print(f"FrameStack | {[self.frameStack.frames[x].values for x in range(len(self.frameStack.frames))]}")
-        print(f"CallStack | {self.callStack.values}\n")
+        print(f"| DataStack\t\t| {self.dataStack.values}", file=sys.stderr)
+        print(f"| FrameStack\t| {[self.frameStack.frames[x].values for x in range(len(self.frameStack.frames))]}", file=sys.stderr)
+        print(f"| CallStack\t\t| {self.callStack.values}", file=sys.stderr)
+        print(f"| Counter\t\t| {self.counter}", file=sys.stderr)
+        print(f"| Executed INS\t| {self.executed}", file=sys.stderr)
+        print(frame + '\n', file=sys.stderr)
 
     def checkInstruction(self, ins):
         """
@@ -208,6 +235,8 @@ class InstructionHandler:
     def MOVE(self):
         self.checkArg1Var()
         type, val = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2)
+        if type is None:
+            sys.exit(56)
         if type == 'nil':
             val = ''
         self.moveToVar(type, val)
@@ -246,10 +275,10 @@ class InstructionHandler:
             sys.exit(53)
 
     def CALL(self):
-        pass
+        self.callStack.push(self.counter + 1)
 
     def RETURN(self):
-        pass
+        self.counter = self.callStack.pop()
 
     def PUSHS(self):
         self.dataStack.push(self.ins.arg1.type, self.ins.arg1.value)
@@ -314,7 +343,8 @@ class InstructionHandler:
         if self.ins.arg2.type == 'nil' or self.ins.arg3.type == 'nil':
             sys.exit(53)
 
-        _, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2, self.ins.arg3)
+        _, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
+                                      self.ins.arg3)
         return val1, val2
 
     def LT(self):
@@ -397,7 +427,8 @@ class InstructionHandler:
         self.checkArg1Var()
 
         type, val1 = self.getSymb(['bool'], self.ins.arg2)
-
+        if type is None:
+            sys.exit(56)
         if type != 'bool':
             sys.exit(53)
         if type is None:
@@ -470,8 +501,11 @@ class InstructionHandler:
         self.checkArg1Var()
 
         type, val1 = self.getSymb(['string'], self.ins.arg2)
+
         if type is None:
             sys.exit(56)
+        if type != 'int':
+            sys.exit(53)
         try:
             val = len(val1)
         except ValueError:
@@ -479,7 +513,7 @@ class InstructionHandler:
 
         self.moveToVar('int', val)
 
-    def GETCHAR(self): # TODO
+    def GETCHAR(self):  # TODO
         self.checkArg1Var()
 
         type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
@@ -514,14 +548,13 @@ class InstructionHandler:
         self.moveToVar('string', type)
 
     def LABEL(self):
-        if self.ins.arg1 not in LABELS:
-            LABELS.append((self.ins.name, self.ins.order))
-        else:
-            sys.exit(52
-                     )
+        pass
 
     def JUMP(self):
-        pass
+        try:
+            self.counter = self.labels[self.ins.arg1.value]
+        except KeyError:
+            sys.exit(52)
 
     def JUMPIFEQ(self):
         pass
@@ -558,7 +591,29 @@ class InstructionHandler:
         pass
 
     def BREAK(self):
-        pass
+        self.printMemory()
 
+    def getAllLabels(self, instructions):
+        for i in instructions[1:-1]:  # skip dummy instructions
+            if i.arg1.type == 'label':
+                if i.name not in self.labels:
+                    self.labels[i.name] = i.order
+                else:
+                    sys.exit(52)
+
+    def start(self, instructions):
+        self.getAllLabels(instructions)
+        while True:
+            ins = instructions[self.counter]
+            if ins.name == "DUMMY_START":
+                self.counter += 1
+                continue
+            if ins.name == "DUMMY_END":
+                break
+
+            checkArgCount(ins)
+            self.checkInstruction(ins)
+            self.counter += 1
+            self.executed += 1
 
 ih = InstructionHandler()
