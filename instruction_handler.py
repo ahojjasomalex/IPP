@@ -2,13 +2,6 @@ import sys
 from globals import *
 
 
-def splitVar(var):
-    try:
-        return var.split("@")[1]
-    except AttributeError:
-        sys.exit(56)
-
-
 class Frame:
     def __init__(self):
         self.values = {}
@@ -101,7 +94,7 @@ class InstructionHandler:
 
     def checkInstruction(self, ins):
         """
-        Calls respective method to handle instruction by its name
+        Calls respective method to handle instruction based on its name
         :param ins: Instruction object
         :return: Nothing
         """
@@ -139,7 +132,7 @@ class InstructionHandler:
 
     def checkArg1Var(self):
         """
-        Checks if arg1 is type var and calls function checkDefined(arg) to check if variable is defined
+        Checks if arg1 is type var and calls checkDefined() method to check if variable is defined
         Used in almost every instruction method
         :return: Nothing
         """
@@ -173,7 +166,7 @@ class InstructionHandler:
 
     def getSymbs(self, typeref1, typeref2, arg2=None, arg3=None):
         """
-        Same as getSymb, but for 2 arguments at once
+        Same as getSymb(), but for 2 arguments at once
         :param typeref1: Reference type(s)
         :param typeref2: Reference type(s)
         :param arg2: Instruction argument object
@@ -182,12 +175,15 @@ class InstructionHandler:
         """
         type1, val1 = self.getSymb(typeref1, arg2)
         type2, val2 = self.getSymb(typeref2, arg3)
+        #  if types are incompatible -> error
         if type1 == type2:
             return type1, val1, val2
+        else:
+            sys.exit(53)
 
     def moveToVar(self, type, value):
         """
-        Moves variable type and its value in form of tuple into variable defined in arg1 of instrunction
+        Moves variable type and its value in form of tuple into variable defined in arg1 of instruction
         :param type: Type of variable
         :param value: Value of variable
         :return: Nothing
@@ -317,15 +313,16 @@ class InstructionHandler:
 
         self.moveToVar(type, val)
 
-    def LT(self):
-        if self.ins.arg1.type != 'var' or self.ins.arg2.type != self.ins.arg3.type and self.ins.arg2.type != 'nil':
+    def LTGT(self):
+        self.checkArg1Var()
+        if self.ins.arg2.type == 'nil' or self.ins.arg3.type == 'nil':
             sys.exit(53)
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
-        type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
-                                         self.ins.arg3)
+        _, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2, self.ins.arg3)
+        return val1, val2
 
+    def LT(self):
+        val1, val2 = self.LTGT()
         try:
             val = val1 < val2
         except ValueError:
@@ -337,14 +334,7 @@ class InstructionHandler:
         self.moveToVar('bool', val)
 
     def GT(self):
-        if self.ins.arg1.type != 'var' or self.ins.arg2.type != self.ins.arg3.type and self.ins.arg2.type != 'nil':
-            sys.exit(53)
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
-
-        type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
-                                         self.ins.arg3)
-
+        val1, val2 = self.LTGT()
         try:
             val = val1 > val2
         except ValueError:
@@ -448,8 +438,6 @@ class InstructionHandler:
 
     def STRI2INT(self):
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
 
@@ -468,8 +456,6 @@ class InstructionHandler:
 
     def CONCAT(self):
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['string'], ['string'], self.ins.arg2, self.ins.arg3)
 
@@ -486,8 +472,6 @@ class InstructionHandler:
 
     def STRLEN(self):
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         type, val1, _ = self.getSymbs(['string'], ['string'], self.ins.arg2)
 
@@ -503,8 +487,6 @@ class InstructionHandler:
 
     def GETCHAR(self):  # TODO
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
 
@@ -521,8 +503,6 @@ class InstructionHandler:
 
     def SETCHAR(self):  # TODO
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
 
@@ -537,9 +517,7 @@ class InstructionHandler:
         self.moveToVar('string', val.lower())
 
     def TYPE(self):
-        if self.ins.arg1.type != 'var' and self.ins.arg2.type == 'string':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
 
         if self.isInFrames(self.ins.arg2.id):
             val1 = self.locateVariable(self.ins.arg2.frame, self.ins.arg2.id)

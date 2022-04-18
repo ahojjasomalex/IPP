@@ -46,14 +46,6 @@ def checkAndSortOrder(instructions):
     return instructions
 
 
-def printInstructions(instructions):
-    for i in instructions:
-        print(f"{i.order} {i.name}\n"
-              f"ARG1:\ttype= {i.arg1.type}\tvalue= {i.arg1.value}\n"
-              f"ARG2:\ttype= {i.arg2.type}\tvalue= {i.arg2.value}\n"
-              f"ARG3:\ttype= {i.arg3.type}\tvalue= {i.arg3.value}\n")
-
-
 def checkArgCount(ins):
     if ins.name in ARGC0:
         if ins.arg1.type or ins.arg2.type or ins.arg3.type is not None:
@@ -124,9 +116,6 @@ def main():
     elif args.source is None and args.input is None:
         sys.exit(10)  # bad parameters
 
-    # print(f"source file: {source}")
-    # print(f"input file: {input}")
-
     # try to parse XML file
     # source file not specified -> source = stdin
     if source == "stdin":
@@ -159,8 +148,6 @@ def main():
         INSTRUCTIONS.append(ins)
 
     INSTRUCTIONS = checkAndSortOrder(INSTRUCTIONS)
-
-    # printInstructions(INSTRUCTIONS)
 
     for ins in INSTRUCTIONS:
         checkArgCount(ins)
