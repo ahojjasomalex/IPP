@@ -200,13 +200,7 @@ class InstructionHandler:
 
     def MOVE(self):
         self.checkArg1Var()
-        if self.checkDefined(self.ins.arg1):
-            try:
-                self.checkDefined(self.ins.arg2)
-            except KeyError:
-                self.moveToVar(self.ins.arg2.type, self.ins.arg2.value)
-            else:
-                self.moveToVar(*self.moveFromFrame(self.ins.arg2))
+        self.moveToVar(*self.getSymb(['int','string','bool', 'nil', 'var'], self.ins.arg2))
 
     def CREATEFRAME(self):
         self.TF = Frame()
