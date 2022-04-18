@@ -80,6 +80,10 @@ class InstructionHandler:
 
     # helper debug function to print contents of frames and stacks
     def printMemory(self):
+        """
+        Debug function to print contents of frames and stacks
+        :return: Nothing
+        """
         print(self.ins.name)
         print(f"GF | {self.GF.values}")
         try:
@@ -96,11 +100,22 @@ class InstructionHandler:
         print(f"CallStack | {self.callStack.values}\n")
 
     def checkInstruction(self, ins):
+        """
+        Calls respective method to handle instruction by its name
+        :param ins: Instruction object
+        :return: Nothing
+        """
         self.ins = ins
+        # call function based on instruction name
         method = getattr(InstructionHandler, self.ins.name)
         method(self)
 
     def checkDefined(self, arg):
+        """
+        Checks if argument variable is defined on given frame {GF, LF, TF}
+        :param arg: Instruction argument object
+        :return: True if present
+        """
         try:
             if arg.value in self.__dict__[arg.frame].values:
                 return True
@@ -110,6 +125,11 @@ class InstructionHandler:
             sys.exit(55)
 
     def moveFromFrame(self, arg):
+        """
+        Returns value of variable in given frame {GF, LF, TF}
+        :param arg: Instruction argument object
+        :return: Value of variable on given frame
+        """
         try:
             return self.__dict__[arg.frame].values[arg.value]
         except KeyError:
@@ -118,10 +138,23 @@ class InstructionHandler:
             sys.exit(55)
 
     def checkArg1Var(self):
+        """
+        Checks if arg1 is type var and calls function checkDefined(arg) to check if variable is defined
+        Used in almost every instruction method
+        :return: Nothing
+        """
         if self.ins.arg1.type != 'var':
             sys.exit(53)
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
     def getSymb(self, typeref, arg=None):
+        """
+        Returns either variable or symbol type its value
+        :param typeref: Reference type(s)
+        :param arg: Instruction argument object
+        :return: Type of argument, value of argument
+        """
         if arg is None:
             return None
         if arg.type in typeref or arg.type == 'var':
@@ -139,12 +172,26 @@ class InstructionHandler:
         return type, val
 
     def getSymbs(self, typeref1, typeref2, arg2=None, arg3=None):
+        """
+        Same as getSymb, but for 2 arguments at once
+        :param typeref1: Reference type(s)
+        :param typeref2: Reference type(s)
+        :param arg2: Instruction argument object
+        :param arg3: Instruction argument object
+        :return: Type of argument, value of argument1, value of argument2
+        """
         type1, val1 = self.getSymb(typeref1, arg2)
         type2, val2 = self.getSymb(typeref2, arg3)
         if type1 == type2:
             return type1, val1, val2
 
     def moveToVar(self, type, value):
+        """
+        Moves variable type and its value in form of tuple into variable defined in arg1 of instrunction
+        :param type: Type of variable
+        :param value: Value of variable
+        :return: Nothing
+        """
         value = str(value)
         try:
             self.checkDefined(self.ins.arg1)
@@ -216,8 +263,6 @@ class InstructionHandler:
 
     def ADD(self):
         self.checkArg1Var()
-        if not self.checkDefined(self.ins.arg1):
-            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['int', 'var'], ['int', 'var'], self.ins.arg2, self.ins.arg3)
 
@@ -273,10 +318,10 @@ class InstructionHandler:
         self.moveToVar(type, val)
 
     def LT(self):
-
         if self.ins.arg1.type != 'var' or self.ins.arg2.type != self.ins.arg3.type and self.ins.arg2.type != 'nil':
             sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
                                          self.ins.arg3)
@@ -294,7 +339,8 @@ class InstructionHandler:
     def GT(self):
         if self.ins.arg1.type != 'var' or self.ins.arg2.type != self.ins.arg3.type and self.ins.arg2.type != 'nil':
             sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
                                          self.ins.arg3)
@@ -312,7 +358,8 @@ class InstructionHandler:
     def EQ(self):
         if self.ins.arg1.type != 'var' or self.ins.arg2.type != self.ins.arg3.type and self.ins.arg2.type != 'nil':
             sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['int', 'string', 'bool'], ['int', 'string', 'bool'], self.ins.arg2,
                                          self.ins.arg3)
@@ -327,14 +374,12 @@ class InstructionHandler:
         val = str(val).lower()
         self.moveToVar('bool', val)
 
-    def AND(self):
+    def ANDOR(self):
         self.checkArg1Var()
-        self.checkDefined(self.ins.arg1)
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
-        type, val1, val2 = self.getSymbs(['bool'], ['bool'], self.ins.arg2, self.ins.arg3)
-
-        if val1 == 'None' or val2 == 'None':
-            sys.exit(53)
+        _, val1, val2 = self.getSymbs(['bool'], ['bool'], self.ins.arg2, self.ins.arg3)
 
         if val1 == 'true':
             val1 = True
@@ -345,6 +390,10 @@ class InstructionHandler:
         elif val2 == 'false':
             val2 = False
 
+        return val1, val2
+
+    def AND(self):
+        val1, val2 = self.ANDOR()
         try:
             val = val1 and val2
             val = str(val)
@@ -354,24 +403,7 @@ class InstructionHandler:
         self.moveToVar('bool', val.lower())
 
     def OR(self):
-        if self.ins.arg1.type != 'var':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
-
-        type, val1, val2 = self.getSymbs(['bool'], ['bool'], self.ins.arg2, self.ins.arg3)
-
-        if val1 == 'None' or val2 == 'None':
-            sys.exit(53)
-
-        if val1 == 'true':
-            val1 = True
-        elif val1 == 'false':
-            val1 = False
-        if val2 == 'true':
-            val2 = True
-        elif val2 == 'false':
-            val2 = False
-
+        val1, val2 = self.ANDOR()
         try:
             val = val1 or val2
             val = str(val)
@@ -381,9 +413,9 @@ class InstructionHandler:
         self.moveToVar('bool', val.lower())
 
     def NOT(self):
-        if self.ins.arg1.type != 'var' and self.ins.arg3 is None:
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
         type, val1 = self.getSymb(['bool'], self.ins.arg2)
 
@@ -401,38 +433,32 @@ class InstructionHandler:
         self.moveToVar('bool', val.lower())
 
     def INT2CHAR(self):
-        if self.ins.arg1.type != 'var' and self.ins.arg2.type == 'int':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
         type, val1 = self.getSymb(['int'], self.ins.arg2)
-
-        if val1 == 'None':
-            sys.exit(53)
 
         try:
             val = chr(int(val1))
         except ValueError:
             sys.exit(53)
 
-        self.moveToVar('str', val)
+        self.moveToVar(type, val)
 
     def STRI2INT(self):
-        if self.ins.arg1.type != 'var':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
-
-        if val1 == 'None' or val2 == 'None':
-            sys.exit(53)
 
         try:
             val = ord(val1[int(val2)])
         except ValueError:
             sys.exit(53)
 
-        self.moveToVar('int', val)
+        self.moveToVar(type, val)
 
     def READ(self):
         pass
@@ -441,9 +467,9 @@ class InstructionHandler:
         pass
 
     def CONCAT(self):
-        if self.ins.arg1.type != 'var' and self.ins.arg2.type == 'string' and self.ins.arg3.type == 'string':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['string'], ['string'], self.ins.arg2, self.ins.arg3)
 
@@ -456,12 +482,12 @@ class InstructionHandler:
         except ValueError:
             sys.exit(53)
 
-        self.moveToVar('string', val.lower())
+        self.moveToVar(type, val.lower())
 
     def STRLEN(self):
-        if self.ins.arg1.type != 'var' and self.ins.arg2.type == 'string':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
         type, val1, _ = self.getSymbs(['string'], ['string'], self.ins.arg2)
 
@@ -476,9 +502,9 @@ class InstructionHandler:
         self.moveToVar('int', val)
 
     def GETCHAR(self):  # TODO
-        if self.ins.arg1.type != 'var':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
 
@@ -494,9 +520,9 @@ class InstructionHandler:
             sys.exit(58)
 
     def SETCHAR(self):  # TODO
-        if self.ins.arg1.type != 'var' and self.ins.arg2.type == 'string' and self.ins.arg3.type == 'int':
-            sys.exit(53)
-        self.checkDefined(self.ins.arg1)
+        self.checkArg1Var()
+        if not self.checkDefined(self.ins.arg1):
+            sys.exit(54)
 
         type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
 
@@ -540,7 +566,7 @@ class InstructionHandler:
         self.moveToVar('string', type)
 
     def LABEL(self):
-        pass
+        LABELS.append((self.ins.name, self.ins.order))
 
     def JUMP(self):
         pass

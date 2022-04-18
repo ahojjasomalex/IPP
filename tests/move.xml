@@ -20,7 +20,7 @@
   </instruction>
       <instruction order="7" opcode="MOVE">
     <arg1 type="var">LF@no2</arg1>
-    <arg2 type="string">LF@no1</arg2>
+    <arg2 type="string"></arg2>
   </instruction>
  <instruction order="10" opcode="POPFRAME">
   </instruction>
