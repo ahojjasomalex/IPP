@@ -279,10 +279,14 @@ class InstructionHandler:
             sys.exit(53)
 
     def CALL(self):
-        self.callStack.push(self.counter + 1)
+        self.callStack.push(self.counter)
+        self.JUMP()
 
     def RETURN(self):
-        self.counter = self.callStack.pop()
+        try:
+            self.counter = self.labels[self.callStack.pop()]
+        except KeyError:
+            sys.exit(52)
 
     def PUSHS(self):
         self.dataStack.push(self.ins.arg1.type, self.ins.arg1.value)
@@ -411,21 +415,21 @@ class InstructionHandler:
         val1, val2 = self.ANDOR()
         try:
             val = val1 and val2
-            val = str(val)
+            val = str(val).lower()
         except ValueError:
             sys.exit(53)
 
-        self.moveToVar('bool', val.lower())
+        self.moveToVar('bool', val)
 
     def OR(self):
         val1, val2 = self.ANDOR()
         try:
             val = val1 or val2
-            val = str(val)
+            val = str(val).lower()
         except ValueError:
             sys.exit(53)
 
-        self.moveToVar('bool', val.lower())
+        self.moveToVar('bool', val)
 
     def NOT(self):
         self.checkArg1Var()
@@ -462,19 +466,22 @@ class InstructionHandler:
         except ValueError:
             sys.exit(58)
 
-        self.moveToVar('int', val)
+        self.moveToVar('string', val)
 
     def STRI2INT(self):
         self.checkArg1Var()
 
-        type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
+        type1, val1 = self.getSymb(['string'], self.ins.arg2)
+        type2, val2 = self.getSymb(['int'], self.ins.arg3)
 
         try:
             val = ord(val1[int(val2)])
         except ValueError:
             sys.exit(58)
+        except IndexError:
+            sys.exit(58)
 
-        self.moveToVar(type, val)
+        self.moveToVar('int', val)
 
     def READ(self):
         pass
@@ -574,10 +581,7 @@ class InstructionHandler:
                 except KeyError:
                     sys.exit(52)
         elif type1 == 'nil' or type2 == 'nil':
-            try:
-                self.counter = self.labels[self.ins.arg1.value]
-            except KeyError:
-                sys.exit(52)
+            return
         else:
             sys.exit(53)
 
@@ -692,6 +696,7 @@ class InstructionHandler:
 
         if type1 == type2:
             val = val1 < val2
+            val = str(val).lower()
             self.dataStack.push('bool', val)
         else:
             sys.exit(53)
@@ -702,6 +707,7 @@ class InstructionHandler:
 
         if type1 == type2:
             val = val1 > val2
+            val = str(val).lower()
             self.dataStack.push('bool', val)
         else:
             sys.exit(53)
@@ -743,13 +749,13 @@ class InstructionHandler:
     def ANDS(self):
         val1, val2 = self.ANDSORS()
         val = val1 and val2
-        val = str(val)
+        val = str(val).lower()
         self.dataStack.push('bool', val)
 
     def ORS(self):
         val1, val2 = self.ANDSORS()
         val = val1 or val2
-        val = str(val)
+        val = str(val).lower()
         self.dataStack.push('bool', val)
 
     def NOTS(self):
@@ -762,20 +768,67 @@ class InstructionHandler:
         elif val == 'false':
             val = False
 
-        val = not val
+        val = str(not val).lower()
         self.dataStack.push('bool', val)
 
     def INT2CHARS(self):
-        pass
+        type, val = self.dataStack.pop()
+        if type != 'int':
+            sys.exit(53)
+        try:
+            val = chr(int(val))
+        except ValueError:
+            sys.exit(58)
+        self.dataStack.push('string', val)
 
     def STRI2INTS(self):
-        pass
+        type2, val2 = self.dataStack.pop()
+        type1, val1 = self.dataStack.pop()
+
+        if type1 != 'string' or type2 != 'int':
+            sys.exit(53)
+
+        try:
+            val = ord(val1[int(val2)])
+        except ValueError:
+            sys.exit(58)
+        except IndexError:
+            sys.exit(58)
+
+        self.dataStack.push('int', val)
 
     def JUMPIFEQS(self):
-        pass
+        type2, val2 = self.dataStack.pop()
+        type1, val1 = self.dataStack.pop()
 
-    def JUMPIFNEEQ(self):
-        pass
+        if type1 == type2:
+            if val1 == val2:
+                try:
+                    self.counter = self.labels[self.ins.arg1.value]
+                except KeyError:
+                    sys.exit(52)
+        elif type1 == 'nil' or type2 == 'nil':
+            return
+        else:
+            sys.exit(53)
+
+    def JUMPIFNEQS(self):
+        type2, val2 = self.dataStack.pop()
+        type1, val1 = self.dataStack.pop()
+
+        if type1 == type2:
+            if val1 != val2:
+                try:
+                    self.counter = self.labels[self.ins.arg1.value]
+                except KeyError:
+                    sys.exit(52)
+        elif type1 == 'nil' or type2 == 'nil':
+            try:
+                self.counter = self.labels[self.ins.arg1.value]
+            except KeyError:
+                sys.exit(52)
+        else:
+            sys.exit(53)
 
     def getAllLabels(self, instructions):
         for i in instructions[1:-1]:  # skip dummy instructions
