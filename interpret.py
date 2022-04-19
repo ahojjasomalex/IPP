@@ -64,7 +64,7 @@ def main():
     # global variables
     INSTRUCTIONS = []  # list of all instructions
     global source  # XML source
-    global input  # program input
+    global inputFile   # input file
 
     parse = argparse.ArgumentParser(add_help=False)
     parse.add_argument('--source', help='XML source')
@@ -90,19 +90,19 @@ def main():
     if args.source is not None and args.input is not None:
         if checkFile(args.source) and checkFile(args.input):
             source = args.source
-            input = args.input
+            inputFile = args.input
         else:
             sys.exit(11)
 
     elif args.source is None and args.input is not None:
         source = "stdin"
         if checkFile(args.input):
-            input = args.input
+            inputFile = args.input
         else:
             sys.exit(11)
 
     elif args.input is None and args.source is not None:
-        input = "stdin"
+        inputFile = "stdin"
         if checkFile(args.source):
             source = args.source
         else:
@@ -154,7 +154,7 @@ def main():
 
     INSTRUCTIONS = [dummy_start] + INSTRUCTIONS + [dummy_end]
 
-    ih.start(INSTRUCTIONS)
+    ih.start(INSTRUCTIONS, inputFile)
 
 
 if __name__ == '__main__':

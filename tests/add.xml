@@ -18,8 +18,8 @@
      <instruction order="6" opcode="DEFVAR">
   <arg1 type="var">TF@c</arg1>
  </instruction>
- <instruction order="7" opcode="SUB">
-  <arg1 type="var">TF@c</arg1>
+ <instruction order="7" opcode="ADD">
+  <arg1 type="int">20</arg1>
   <arg3 type="var">GF@a</arg3>
   <arg2 type="int">120</arg2>
  </instruction>

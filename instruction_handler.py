@@ -59,7 +59,7 @@ class CallStack:
 
     def pop(self):
         if len(self.values) <= 0:
-            sys.exit(55)
+            sys.exit(56)
         else:
             return self.values.pop()
 
@@ -104,7 +104,8 @@ class InstructionHandler:
         tabs = '\t' * 3
         frame = '-' * 60
         print('\n' + frame, file=sys.stderr)
-        print("| INS" + tabs + '| ' + self.ins.name, file=sys.stderr)
+        print(f"| INS {tabs}| {self.ins.name} {self.ins.arg1.value} {self.ins.arg2.value} {self.ins.arg3.value}",
+              file=sys.stderr)
         print(f"| GF{tabs}| {self.GF.values}", file=sys.stderr)
         try:
             print(f"| LF{tabs}| {self.LF.values}", file=sys.stderr)
@@ -190,6 +191,8 @@ class InstructionHandler:
             if arg.type == 'var':
                 try:
                     type, val = self.moveFromFrame(arg)
+                    if type not in typeref:
+                        sys.exit(53)
                 except TypeError:
                     type = None
                     val = arg.value
@@ -283,12 +286,11 @@ class InstructionHandler:
         self.JUMP()
 
     def RETURN(self):
-        try:
-            self.counter = self.labels[self.callStack.pop()]
-        except KeyError:
-            sys.exit(52)
+        self.counter = self.callStack.pop()
 
     def PUSHS(self):
+        if self.ins.arg1.type == 'var':
+            self.checkArg1Var()
         self.dataStack.push(self.ins.arg1.type, self.ins.arg1.value)
 
     def POPS(self):
@@ -474,8 +476,13 @@ class InstructionHandler:
         type1, val1 = self.getSymb(['string'], self.ins.arg2)
         type2, val2 = self.getSymb(['int'], self.ins.arg3)
 
+        if type1 is None or type2 is None:
+            sys.exit(56)
         try:
-            val = ord(val1[int(val2)])
+            val2 = int(val2)
+            if val2 < 0:
+                sys.exit(58)
+            val = ord(val1[val2])
         except ValueError:
             sys.exit(58)
         except IndexError:
@@ -484,7 +491,14 @@ class InstructionHandler:
         self.moveToVar('int', val)
 
     def READ(self):
-        pass
+        self.checkArg1Var()
+        if self.ins.arg2.type != 'type':
+            sys.exit(53)
+        if self.ins.arg2.value in ['int', 'string', 'bool']:
+            line = str(self.input.readline().strip())
+        else:
+            sys.exit(53)
+        self.moveToVar(self.ins.arg2.value, line)
 
     def WRITE(self):
         type, val1 = self.getSymb(['bool', 'int', 'string', 'nil'], self.ins.arg1)
@@ -515,19 +529,37 @@ class InstructionHandler:
 
         if type is None:
             sys.exit(56)
-        if type != 'int':
-            sys.exit(53)
         try:
-            val = len(val1)
+            val = len(str(val1))
         except ValueError:
             sys.exit(53)
 
         self.moveToVar('int', val)
 
-    def GETCHAR(self):  # TODO
+    def GETCHAR(self):
         self.checkArg1Var()
 
-        type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
+        type1, val1 = self.getSymb(['string'], self.ins.arg2)
+        type2, val2 = self.getSymb(['int'], self.ins.arg3)
+
+        try:
+            val2 = int(val2)
+            if val2 < 0:
+                sys.exit(58)
+            val = val1[val2]
+            val = str(val)
+        except ValueError:
+            sys.exit(58)
+        except IndexError:
+            sys.exit(58)
+
+        self.moveToVar('string', val.lower())
+
+    def SETCHAR(self):
+        self.checkArg1Var()
+
+        type1, val1 = self.getSymb(['int'], self.ins.arg2)
+        type2, val2 = self.getSymb(['string'], self.ins.arg3)
 
         try:
             val = val1[int(val2)]
@@ -535,17 +567,6 @@ class InstructionHandler:
         except ValueError:
             sys.exit(58)
         except IndexError:
-            sys.exit(58)
-
-    def SETCHAR(self):  # TODO
-        self.checkArg1Var()
-
-        type, val1, val2 = self.getSymbs(['string'], ['int'], self.ins.arg2, self.ins.arg3)
-
-        try:
-            val = val1[int(val2)]
-            val = str(val)
-        except ValueError:
             sys.exit(58)
         self.moveToVar('string', val.lower())
 
@@ -575,11 +596,12 @@ class InstructionHandler:
         if type1 is None or type2 is None:
             sys.exit(56)
         if type1 == type2:
+            try:
+                x = self.labels[self.ins.arg1.value]
+            except KeyError:
+                sys.exit(52)
             if val1 == val2:
-                try:
-                    self.counter = self.labels[self.ins.arg1.value]
-                except KeyError:
-                    sys.exit(52)
+                self.counter = x
         elif type1 == 'nil' or type2 == 'nil':
             return
         else:
@@ -592,11 +614,12 @@ class InstructionHandler:
         if type1 is None or type2 is None:
             sys.exit(56)
         if type1 == type2:
+            try:
+                x = self.labels[self.ins.arg1.value]
+            except KeyError:
+                sys.exit(52)
             if val1 != val2:
-                try:
-                    self.counter = self.labels[self.ins.arg1.value]
-                except KeyError:
-                    sys.exit(52)
+                self.counter = x
         elif type1 == 'nil' or type2 == 'nil':
             try:
                 self.counter = self.labels[self.ins.arg1.value]
@@ -642,7 +665,7 @@ class InstructionHandler:
     def BREAK(self):
         self.printMemory()
 
-### STACK INSTRUCTIONS ###
+    ### STACK INSTRUCTIONS ###
 
     def CLEARS(self):
         self.dataStack.values = []
@@ -838,12 +861,12 @@ class InstructionHandler:
                 else:
                     sys.exit(52)
 
-    def initInput(self):
-        if input == 'stdin':
-            self.input = sys.stdin
-
-    def start(self, instructions):
+    def start(self, instructions, inputfile):
         self.getAllLabels(instructions)
+        if inputfile != 'stdin':
+            self.input = open(inputfile, 'r')
+        else:
+            self.input = sys.stdin
 
         while True:
             ins = instructions[self.counter]
@@ -854,8 +877,8 @@ class InstructionHandler:
                 break
 
             checkArgCount(ins)
-            self.checkInstruction(ins)
             self.counter += 1
+            self.checkInstruction(ins)
             self.executed += 1
             self.printMemory()
 
