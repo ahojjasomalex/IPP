@@ -686,6 +686,97 @@ class InstructionHandler:
         else:
             sys.exit(53)
 
+    def LTS(self):
+        type2, val2 = self.dataStack.pop()
+        type1, val1 = self.dataStack.pop()
+
+        if type1 == type2:
+            val = val1 < val2
+            self.dataStack.push('bool', val)
+        else:
+            sys.exit(53)
+
+    def GTS(self):
+        type2, val2 = self.dataStack.pop()
+        type1, val1 = self.dataStack.pop()
+
+        if type1 == type2:
+            val = val1 > val2
+            self.dataStack.push('bool', val)
+        else:
+            sys.exit(53)
+
+    def EQS(self):
+        type2, val2 = self.dataStack.pop()
+        type1, val1 = self.dataStack.pop()
+
+        if type1 == type2:
+            try:
+                val = val1 == val2
+            except ValueError:
+                sys.exit(53)
+            val = str(val).lower()
+            self.dataStack.push('bool', val)
+        elif type1 == 'nil' or type2 == 'nil':
+            self.dataStack.push('bool', 'false')
+        else:
+            sys.exit(53)
+
+    def ANDSORS(self):
+        type2, val2 = self.dataStack.pop()
+        type1, val1 = self.dataStack.pop()
+
+        if type1 != 'bool' or type2 != 'bool':
+            sys.exit(53)
+
+        if val1 == 'true':
+            val1 = True
+        elif val1 == 'false':
+            val1 = False
+        if val2 == 'true':
+            val2 = True
+        elif val2 == 'false':
+            val2 = False
+
+        return val1, val2
+
+    def ANDS(self):
+        val1, val2 = self.ANDSORS()
+        val = val1 and val2
+        val = str(val)
+        self.dataStack.push('bool', val)
+
+    def ORS(self):
+        val1, val2 = self.ANDSORS()
+        val = val1 or val2
+        val = str(val)
+        self.dataStack.push('bool', val)
+
+    def NOTS(self):
+        type, val = self.dataStack.pop()
+        if type != 'bool':
+            sys.exit(53)
+
+        if val == 'true':
+            val = True
+        elif val == 'false':
+            val = False
+
+        val = not val
+        self.dataStack.push('bool', val)
+
+    def INT2CHARS(self):
+        pass
+
+    def STRI2INTS(self):
+        pass
+
+    def JUMPIFEQS(self):
+        pass
+
+    def JUMPIFNEEQ(self):
+        pass
+
     def getAllLabels(self, instructions):
         for i in instructions[1:-1]:  # skip dummy instructions
             if re.match('^label$', i.name, re.IGNORECASE):

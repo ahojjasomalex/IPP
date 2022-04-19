@@ -13,10 +13,14 @@ OPCODES = ['MOVE', 'CREATEFRAME', 'PUSHFRAME', 'POPFRAME', 'DEFVAR', 'CALL', 'RE
            'CONCAT', 'STRLEN', 'GETCHAR', 'SETCHAR',
            'TYPE',
            'LABEL', 'JUMP', 'JUMPIFEQ', 'JUMPIFNEQ', 'EXIT',
-           'DPRINT', 'BREAK', 'ADDS', 'SUBS', 'MULS', 'IDIVS']
+           'DPRINT', 'BREAK',
+           'ADDS', 'SUBS', 'MULS', 'IDIVS', 'LTS', 'GTS', 'EQS', 'ANDS', 'ORS', 'NOTS', 'INT2CHARS', 'STRI2INTS',
+           'JUMPIFEQS', 'JUMPIFNEQS']
 
 # same instructions, but sorted to lists by number of arguments they get
-ARGC0 = ['CREATEFRAME', 'PUSHFRAME', 'POPFRAME', 'RETURN', 'BREAK', 'ADDS', 'SUBS', 'MULS', 'IDIVS']
+ARGC0 = ['CREATEFRAME', 'PUSHFRAME', 'POPFRAME', 'RETURN', 'BREAK',
+         'ADDS', 'SUBS', 'MULS', 'IDIVS', 'LTS', 'GTS', 'EQS', 'ANDS', 'ORS', 'NOTS', 'INT2CHARS', 'STRI2INTS',
+         'JUMPIFEQS', 'JUMPIFNEQS']
 ARGC1 = ['DEFVAR', 'CALL', 'PUSHS', 'POPS', 'WRITE', 'LABEL', 'JUMP', 'EXIT', 'DRPINT']
 ARGC2 = ['MOVE', 'INT2CHAR', 'READ', 'STRLEN', 'TYPE', 'NOT']
 ARGC3 = ['ADD', 'SUB', 'MUL', 'IDIV', 'LT', 'GT', 'EQ', 'AND', 'OR', 'STRI2INT', 'CONCAT', 'GETCHAR', 'SETCHAR',
