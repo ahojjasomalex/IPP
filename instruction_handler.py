@@ -94,15 +94,16 @@ class InstructionHandler:
         self.labels = {}
         self.counter = 0
         self.executed = 0
+        self.input = None
 
     def printMemory(self):
         """
         Debug function to print contents of frames and stacks
         :return: Nothing
         """
-        tabs = '\t'*3
-        frame = '-'*60
-        print('\n'+frame, file=sys.stderr)
+        tabs = '\t' * 3
+        frame = '-' * 60
+        print('\n' + frame, file=sys.stderr)
         print("| INS" + tabs + '| ' + self.ins.name, file=sys.stderr)
         print(f"| GF{tabs}| {self.GF.values}", file=sys.stderr)
         try:
@@ -115,7 +116,8 @@ class InstructionHandler:
             print(f"| TF{tabs}| <EMPTY>", file=sys.stderr)
 
         print(f"| DataStack\t\t| {self.dataStack.values}", file=sys.stderr)
-        print(f"| FrameStack\t| {[self.frameStack.frames[x].values for x in range(len(self.frameStack.frames))]}", file=sys.stderr)
+        print(f"| FrameStack\t| {[self.frameStack.frames[x].values for x in range(len(self.frameStack.frames))]}",
+              file=sys.stderr)
         print(f"| CallStack\t\t| {self.callStack.values}", file=sys.stderr)
         print(f"| Labels\t\t| {self.labels}", file=sys.stderr)
         print(f"| Counter\t\t| {self.counter}", file=sys.stderr)
@@ -544,12 +546,13 @@ class InstructionHandler:
         self.checkArg1Var()
         type, val1 = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2)
 
-        if type == None:
+        if type is None:
             type = ''
 
         self.moveToVar('string', type)
 
     def LABEL(self):
+        # all labels are saved at the start of interpreting, so handler method is not needed
         pass
 
     def JUMP(self):
@@ -624,10 +627,64 @@ class InstructionHandler:
             sys.exit(53)
 
     def DPRINT(self):
-        pass
+        type, val1 = self.getSymb(['bool', 'int', 'string', 'nil'], self.ins.arg1)
+
+        if type is None:
+            sys.exit(56)
+        if type == 'nil':
+            print('', file=sys.stderr, end='', sep='')
+        print(val1, file=sys.stderr, end='', sep='')
 
     def BREAK(self):
         self.printMemory()
+
+### STACK INSTRUCTIONS ###
+
+    def CLEARS(self):
+        self.dataStack.values = []
+
+    def ADDS(self):
+        type2, val2 = self.dataStack.pop()
+        type1, val1 = self.dataStack.pop()
+
+        if type1 == type2:
+            val = int(val1) + int(val2)
+            self.dataStack.push(type1, val)
+        else:
+            sys.exit(53)
+
+    def SUBS(self):
+        type2, val2 = self.dataStack.pop()
+        type1, val1 = self.dataStack.pop()
+
+        if type1 == type2:
+            val = int(val1) - int(val2)
+            self.dataStack.push(type1, val)
+        else:
+            sys.exit(53)
+
+    def MULS(self):
+        type2, val2 = self.dataStack.pop()
+        type1, val1 = self.dataStack.pop()
+
+        if type1 == type2:
+            val = int(val1) * int(val2)
+            self.dataStack.push(type1, val)
+        else:
+            sys.exit(53)
+
+    def IDIVS(self):
+        type2, val2 = self.dataStack.pop()
+        type1, val1 = self.dataStack.pop()
+
+        if type1 == type2:
+            try:
+                val = int(val1) // int(val2)
+            except ZeroDivisionError:
+                sys.exit(57)
+            self.dataStack.push(type1, val)
+        else:
+            sys.exit(53)
 
     def getAllLabels(self, instructions):
         for i in instructions[1:-1]:  # skip dummy instructions
@@ -637,8 +694,13 @@ class InstructionHandler:
                 else:
                     sys.exit(52)
 
+    def initInput(self):
+        if input == 'stdin':
+            self.input = sys.stdin
+
     def start(self, instructions):
         self.getAllLabels(instructions)
+
         while True:
             ins = instructions[self.counter]
             if ins.name == "DUMMY_START":
@@ -652,5 +714,6 @@ class InstructionHandler:
             self.counter += 1
             self.executed += 1
             self.printMemory()
+
 
 ih = InstructionHandler()
