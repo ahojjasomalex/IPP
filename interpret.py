@@ -145,11 +145,12 @@ def main():
     INSTRUCTIONS = checkAndSortOrder(INSTRUCTIONS)
 
     dummy_start = DummyInstruction()
-    dummy_end = DummyInstruction()
     dummy_start.name = "DUMMY_START"
     dummy_start.order = 0
+
+    dummy_end = DummyInstruction()
     dummy_end.name = "DUMMY_END"
-    dummy_start.order = len(INSTRUCTIONS)
+    dummy_end.order = len(INSTRUCTIONS) + 1
 
     INSTRUCTIONS = [dummy_start] + INSTRUCTIONS + [dummy_end]
 

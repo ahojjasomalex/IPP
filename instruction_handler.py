@@ -1,4 +1,5 @@
 import sys
+import re
 from globals import *
 
 
@@ -116,6 +117,7 @@ class InstructionHandler:
         print(f"| DataStack\t\t| {self.dataStack.values}", file=sys.stderr)
         print(f"| FrameStack\t| {[self.frameStack.frames[x].values for x in range(len(self.frameStack.frames))]}", file=sys.stderr)
         print(f"| CallStack\t\t| {self.callStack.values}", file=sys.stderr)
+        print(f"| Labels\t\t| {self.labels}", file=sys.stderr)
         print(f"| Counter\t\t| {self.counter}", file=sys.stderr)
         print(f"| Executed INS\t| {self.executed}", file=sys.stderr)
         print(frame + '\n', file=sys.stderr)
@@ -629,9 +631,9 @@ class InstructionHandler:
 
     def getAllLabels(self, instructions):
         for i in instructions[1:-1]:  # skip dummy instructions
-            if i.arg1.type == 'label':
-                if i.name not in self.labels:
-                    self.labels[i.name] = i.order
+            if re.match('^label$', i.name, re.IGNORECASE):
+                if i.arg1.value not in self.labels:
+                    self.labels[i.arg1.value] = i.order
                 else:
                     sys.exit(52)
 
@@ -649,6 +651,6 @@ class InstructionHandler:
             self.checkInstruction(ins)
             self.counter += 1
             self.executed += 1
-
+            self.printMemory()
 
 ih = InstructionHandler()
