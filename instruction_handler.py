@@ -494,11 +494,26 @@ class InstructionHandler:
         self.checkArg1Var()
         if self.ins.arg2.type != 'type':
             sys.exit(53)
-        if self.ins.arg2.value in ['int', 'string', 'bool']:
+        type = self.ins.arg2.value
+        if type in ['int', 'string', 'bool']:
             line = str(self.input.readline().strip())
         else:
             sys.exit(53)
-        self.moveToVar(self.ins.arg2.value, line)
+
+        if type == 'bool':
+            line = line.lower()
+            if line != 'true':
+                line = 'false'
+        if type == 'int':
+            try:
+                line = str(int(line))
+            except ValueError:
+                type = 'nil'
+                line = 'nil'
+        if line == '' and type != 'string':
+            type = 'nil'
+            line = 'nil'
+        self.moveToVar(type, line)
 
     def WRITE(self):
         type, val1 = self.getSymb(['bool', 'int', 'string', 'nil'], self.ins.arg1)
