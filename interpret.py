@@ -152,6 +152,7 @@ def main():
     dummy_end.name = "DUMMY_END"
     dummy_end.order = len(INSTRUCTIONS) + 1
 
+    # insert dummy instructions in the beginning and of instruction list
     INSTRUCTIONS = [dummy_start] + INSTRUCTIONS + [dummy_end]
 
     ih.start(INSTRUCTIONS, inputFile)

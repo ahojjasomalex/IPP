@@ -4,6 +4,11 @@ from globals import *
 
 
 def checkArgCount(ins):
+    """
+    Function checks if number of arguments for instruction is correct
+    :param ins: Instruction object
+    :return: Nothing
+    """
     if ins.name in ARGC0:
         if ins.arg1.type or ins.arg2.type or ins.arg3.type is not None:
             sys.exit(32)
@@ -22,6 +27,9 @@ def checkArgCount(ins):
 
 
 class Frame:
+    """
+    Class representing frame memory object
+    """
     def __init__(self):
         self.values = {}
 
@@ -37,6 +45,9 @@ class Frame:
 
 
 class FrameStack:
+    """
+    Class representing stack of frame memory objects
+    """
     def __init__(self):
         self.frames = []
 
@@ -51,6 +62,9 @@ class FrameStack:
 
 
 class CallStack:
+    """
+    Class representing stack of return call variables
+    """
     def __init__(self):
         self.values = []
 
@@ -65,6 +79,9 @@ class CallStack:
 
 
 class DataStack:
+    """
+    Class representing DataStack for *S Instructions
+    """
     def __init__(self):
         self.values = []
 
@@ -79,6 +96,9 @@ class DataStack:
 
 
 class InstructionHandler:
+    """
+    Main class representing InstructionHandler object as singleton design pattern
+    """
     def __init__(self):
 
         self.ins = None
@@ -239,6 +259,7 @@ class InstructionHandler:
             sys.exit(54)
         self.__dict__[self.ins.arg1.frame].values[self.ins.arg1.value] = (type, value)
 
+    """ALL METHODS IMPLEMENTED BELLOW HANDLE EACH ONE SPECIFIC INTRUCTION"""
     def MOVE(self):
         self.checkArg1Var()
         type, val = self.getSymb(['int', 'string', 'bool', 'nil'], self.ins.arg2)
@@ -869,6 +890,11 @@ class InstructionHandler:
             sys.exit(53)
 
     def getAllLabels(self, instructions):
+        """
+        Cycle through all instructions, pick all labels and store them in dict as {"label": 'order'}
+        :param instructions: List of all instruction objects
+        :return: Nothing
+        """
         for i in instructions[1:-1]:  # skip dummy instructions
             if re.match('^label$', i.name, re.IGNORECASE):
                 if i.arg1.value not in self.labels:
@@ -877,17 +903,25 @@ class InstructionHandler:
                     sys.exit(52)
 
     def start(self, instructions, inputfile):
+        """
+        Final checks and start of interpreting
+        :param instructions: List of all instruction objects
+        :param inputfile: Input file for READ instruction
+        :return:
+        """
         self.getAllLabels(instructions)
         if inputfile != 'stdin':
             self.input = open(inputfile, 'r')
         else:
             self.input = sys.stdin
-
+        # main loop
         while True:
             ins = instructions[self.counter]
+            # for convenience so index in list corresponds with instruction order
             if ins.name == "DUMMY_START":
                 self.counter += 1
                 continue
+                # if dummy instruction is last, stop interpreting
             if ins.name == "DUMMY_END":
                 break
 
@@ -895,7 +929,7 @@ class InstructionHandler:
             self.counter += 1
             self.checkInstruction(ins)
             self.executed += 1
-            self.printMemory()
+            # self.printMemory()
 
 
 ih = InstructionHandler()
